@@ -1,7 +1,6 @@
 package io.github.shreyasskdev.tiledeck.work
 
 import android.content.Context
-import androidx.glance.appwidget.updateAll
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -11,7 +10,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import io.github.shreyasskdev.tiledeck.data.AttendancePrefs
 import io.github.shreyasskdev.tiledeck.data.EtlabRepository
-import io.github.shreyasskdev.tiledeck.widget.AttendanceWidget
+import io.github.shreyasskdev.tiledeck.ui.refreshAttendanceWidgets
 import java.util.concurrent.TimeUnit
 
 class AttendanceWorker(appContext: Context, params: WorkerParameters) :
@@ -26,7 +25,7 @@ class AttendanceWorker(appContext: Context, params: WorkerParameters) :
             val repo = EtlabRepository()
             val fetchResult = repo.fetchAttendance(username, password)
             prefs.saveLastResult(fetchResult.attendance)
-            AttendanceWidget().updateAll(applicationContext)
+            refreshAttendanceWidgets(applicationContext)
             Result.success()
         } catch (e: Exception) {
             if (runAttemptCount < 2) Result.retry() else Result.failure()
@@ -36,8 +35,12 @@ class AttendanceWorker(appContext: Context, params: WorkerParameters) :
     companion object {
         private const val PERIODIC_WORK_NAME = "attendance_periodic_refresh"
 
-        fun schedulePeriodic(context: Context) {
-            val request = PeriodicWorkRequestBuilder<AttendanceWorker>(1, TimeUnit.HOURS)
+        fun schedulePeriodic(context: Context, intervalMinutes: Long? = null) {
+            val prefs = AttendancePrefs(context.applicationContext)
+            val minutes = intervalMinutes ?: prefs.getRefreshIntervalMinutes()
+            val clampedInterval = minutes.coerceAtLeast(15L) // WorkManager minimum is 15 minutes
+
+            val request = PeriodicWorkRequestBuilder<AttendanceWorker>(clampedInterval, TimeUnit.MINUTES)
                 .setConstraints(
                     Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
                 )

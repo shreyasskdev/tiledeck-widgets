@@ -87,6 +87,17 @@ class AttendancePrefs(context: Context) {
     fun getUseCustomNames(): Boolean =
         prefs.getBoolean(KEY_USE_CUSTOM_NAMES, true)
 
+    // ── Background refresh frequency ──────────────────────────────────────────
+
+    fun saveRefreshIntervalMinutes(minutes: Long) {
+        prefs.edit()
+            .putLong(KEY_REFRESH_INTERVAL, minutes)
+            .commit()   // synchronous
+    }
+
+    fun getRefreshIntervalMinutes(): Long =
+        prefs.getLong(KEY_REFRESH_INTERVAL, 60L) // Default 60 mins (1 hour)
+
 
     private companion object {
         const val PREFS_FILE = "etlab_attendance_prefs"
@@ -97,6 +108,7 @@ class AttendancePrefs(context: Context) {
         const val KEY_LAST_UPDATED = "last_updated"
         const val KEY_SUBJECT_NAMES = "subject_names"
         const val KEY_USE_CUSTOM_NAMES = "use_custom_names"
+        const val KEY_REFRESH_INTERVAL = "refresh_interval_minutes"
 
         // Volatile because it may be touched from Activity + Worker + Glance
         // threads. Double-checked locking keeps us to one instance per process.
