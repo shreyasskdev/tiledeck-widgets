@@ -45,9 +45,20 @@ class AttendancePrefs(context: Context) {
             .commit()   // synchronous
     }
 
+    fun saveLastTimetable(result: TimetableResult) {
+        prefs.edit()
+            .putString(KEY_LAST_TIMETABLE, result.toJson())
+            .commit()   // synchronous
+    }
+
     fun getLastResult(): AttendanceResult? =
         prefs.getString(KEY_LAST_RESULT, null)?.let {
             runCatching { AttendanceResult.fromJson(it) }.getOrNull()
+        }
+
+    fun getLastTimetable(): TimetableResult? =
+        prefs.getString(KEY_LAST_TIMETABLE, null)?.let {
+            runCatching { TimetableResult.fromJson(it) }.getOrNull()
         }
 
     fun getLastUpdatedText(): String {
@@ -105,6 +116,7 @@ class AttendancePrefs(context: Context) {
         const val KEY_USERNAME = "username"
         const val KEY_PASSWORD = "password"
         const val KEY_LAST_RESULT = "last_result"
+        const val KEY_LAST_TIMETABLE = "last_timetable"
         const val KEY_LAST_UPDATED = "last_updated"
         const val KEY_SUBJECT_NAMES = "subject_names"
         const val KEY_USE_CUSTOM_NAMES = "use_custom_names"

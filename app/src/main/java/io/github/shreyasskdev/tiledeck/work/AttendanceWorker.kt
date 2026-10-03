@@ -25,6 +25,7 @@ class AttendanceWorker(appContext: Context, params: WorkerParameters) :
             val repo = EtlabRepository()
             val fetchResult = repo.fetchAttendance(username, password)
             prefs.saveLastResult(fetchResult.attendance)
+            fetchResult.timetable?.let { prefs.saveLastTimetable(it) }
             refreshAttendanceWidgets(applicationContext)
             Result.success()
         } catch (e: Exception) {

@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">TileDeck</string>
     <string name="widget_description">Live info tiles for your home screen</string>
+    <string name="timetable_widget_description">Today\'s timetable at a glance</string>
     <string name="widget_description_attendance">Overall attendance and per-subject percentages, updated in the background.</string>
     <string name="widget_description_total">Your current overall attendance percentage at a glance.</string>
 </resources>
