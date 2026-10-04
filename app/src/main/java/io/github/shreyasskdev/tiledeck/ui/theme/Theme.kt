@@ -31,7 +31,7 @@ fun AttendanceTheme(
 
     MaterialExpressiveTheme(
         colorScheme = colorScheme,
-        typography = ExpressiveTypography,
+        typography = AppTypography,          // was ExpressiveTypography
         shapes = ExpressiveShapes,
         content = content,
     )
