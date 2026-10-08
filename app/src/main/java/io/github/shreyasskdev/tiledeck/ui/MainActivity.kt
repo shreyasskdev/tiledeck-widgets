@@ -80,6 +80,8 @@ import io.github.shreyasskdev.tiledeck.widget.ATTENDANCE_WIDGET_UPDATE_KEY
 import io.github.shreyasskdev.tiledeck.widget.AttendanceWidget
 import io.github.shreyasskdev.tiledeck.widget.TOTAL_WIDGET_UPDATE_KEY
 import io.github.shreyasskdev.tiledeck.widget.TotalPercentageWidget
+import io.github.shreyasskdev.tiledeck.widget.TIMETABLE_WIDGET_UPDATE_KEY
+import io.github.shreyasskdev.tiledeck.widget.TimetableWidget
 import io.github.shreyasskdev.tiledeck.widget.enqueueWidgetRefresh
 import io.github.shreyasskdev.tiledeck.work.AttendanceWorker
 import kotlinx.coroutines.Dispatchers
@@ -179,8 +181,21 @@ suspend fun refreshAttendanceWidgets(context: Context) {
             }
         }
 
+        val timetableIds = attendanceManager.getGlanceIds(TimetableWidget::class.java)
+        timetableIds.forEach { glanceId ->
+            runCatching {
+                updateAppWidgetState(appContext, PreferencesGlanceStateDefinition, glanceId) { prefs ->
+                    prefs.toMutablePreferences().apply {
+                        this[TIMETABLE_WIDGET_UPDATE_KEY] = now
+                    }
+                }
+                TimetableWidget().update(appContext, glanceId)
+            }
+        }
+
         AttendanceWidget().updateAll(appContext)
         TotalPercentageWidget().updateAll(appContext)
+        TimetableWidget().updateAll(appContext)
     } catch (e: Exception) {
         Log.e(TAG, "refreshAttendanceWidgets failed", e)
     }
@@ -268,11 +283,12 @@ fun AttendanceExpressiveApp() {
             AppScope.scope.launch {
                 try {
                     val repo = EtlabRepository()
-                    val fetched: AttendanceResult =
-                        repo.fetchAttendance(username.trim(), password).attendance
+                    val fetchResult = repo.fetchAttendance(username.trim(), password)
+                    val fetched: AttendanceResult = fetchResult.attendance
 
                     prefs.saveCredentials(username.trim(), password)
                     prefs.saveLastResult(fetched)
+                    fetchResult.timetable?.let { prefs.saveLastTimetable(it) }
 
                     refreshAttendanceWidgets(appContext)
                     AttendanceWorker.schedulePeriodic(appContext)
@@ -645,4 +661,153 @@ fun AttendanceExpressiveApp() {
             }
         }
     }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Canvas icon helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun PieChartIcon(tint: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.size(18.dp)) {
+        drawArc(color = tint, startAngle = 30f, sweepAngle = 290f, useCenter = true)
+        drawArc(color = tint.copy(alpha = 0.5f), startAngle = 330f, sweepAngle = 50f, useCenter = true)
+    }
+}
+
+@Composable
+private fun EditIcon(tint: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.size(18.dp)) {
+        drawRoundRect(color = tint, cornerRadius = CornerRadius(4f, 4f), style = Stroke(width = 3f))
+        drawLine(
+            color = tint,
+            start = Offset(size.width * 0.25f, size.height * 0.75f),
+            end = Offset(size.width * 0.75f, size.height * 0.25f),
+            strokeWidth = 3f,
+        )
+    }
+}
+
+@Composable
+private fun SettingsIcon(tint: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.size(18.dp)) {
+        drawCircle(color = tint, radius = size.minDimension / 2.2f, style = Stroke(width = 3f))
+        drawCircle(color = tint, radius = size.minDimension / 5f)
+    }
+}
+
+@Composable
+private fun RefreshIcon(tint: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.size(18.dp)) {
+        drawArc(
+            color = tint,
+            startAngle = 30f,
+            sweepAngle = 290f,
+            useCenter = false,
+            style = Stroke(width = 3f, cap = StrokeCap.Round),
+        )
+    }
+}
+
+@Composable
+private fun ClearIcon(tint: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.size(14.dp)) {
+        drawLine(color = tint, start = Offset(0f, 0f), end = Offset(size.width, size.height), strokeWidth = 3f, cap = StrokeCap.Round)
+        drawLine(color = tint, start = Offset(size.width, 0f), end = Offset(0f, size.height), strokeWidth = 3f, cap = StrokeCap.Round)
+    }
+}
+
+@Composable
+private fun AutoFixIcon(tint: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.size(10.dp)) {
+        drawCircle(color = tint, radius = size.minDimension / 2f)
+    }
+}
+
+@Composable
+internal fun ChevronIcon(tint: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.size(16.dp)) {
+        val w = size.width
+        val h = size.height
+        drawLine(color = tint, start = Offset(w * 0.3f, h * 0.2f), end = Offset(w * 0.75f, h * 0.5f), strokeWidth = 3f, cap = StrokeCap.Round)
+        drawLine(color = tint, start = Offset(w * 0.75f, h * 0.5f), end = Offset(w * 0.3f, h * 0.8f), strokeWidth = 3f, cap = StrokeCap.Round)
+    }
+}
+
+@Composable
+internal fun BackArrowIcon(tint: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.size(20.dp)) {
+        val w = size.width
+        val h = size.height
+        drawLine(color = tint, start = Offset(w * 0.7f, h * 0.2f), end = Offset(w * 0.3f, h * 0.5f), strokeWidth = 3f, cap = StrokeCap.Round)
+        drawLine(color = tint, start = Offset(w * 0.3f, h * 0.5f), end = Offset(w * 0.7f, h * 0.8f), strokeWidth = 3f, cap = StrokeCap.Round)
+        drawLine(color = tint, start = Offset(w * 0.3f, h * 0.5f), end = Offset(w * 0.9f, h * 0.5f), strokeWidth = 3f, cap = StrokeCap.Round)
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Install permission helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Returns true if the app is allowed to launch the package installer.
+ * On Android 8.0+ the user must grant this manually in Settings.
+ */
+private fun canInstallPackages(context: Context): Boolean {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        context.packageManager.canRequestPackageInstalls()
+    } else {
+        true
+    }
+}
+
+/**
+ * Sends the user to Settings > Apps > Special access > Install unknown apps
+ * so they can flip the toggle for this app.
+ */
+private fun openInstallPermissionSettings(context: Context) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+            data = Uri.parse("package:${context.packageName}")
+        }
+        context.startActivity(intent)
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Shorthand generator
+// ─────────────────────────────────────────────────────────────────────────────
+
+private val SHORTHAND_STOPWORDS = setOf(
+    "and", "of", "the", "for", "io", "to", "a", "an", "&",
+)
+
+private val LAB_REGEX = Regex("(?i)\\b(lab|laboratory)\\b")
+
+internal fun toShorthand(rawName: String): String {
+    if (rawName.isBlank()) return ""
+
+    val isLab = LAB_REGEX.containsMatchIn(rawName)
+    val cleaned = LAB_REGEX.replace(rawName, " ").trim()
+
+    val words = cleaned
+        .split(Regex("\\s+"))
+        .map { it.trim() }
+        .filter { it.isNotBlank() }
+        .filterIndexed { index, word ->
+            index == 0 || word.lowercase() !in SHORTHAND_STOPWORDS
+        }
+
+    if (words.isEmpty()) return rawName.uppercase()
+
+    val acronym: String = if (words.size == 1) {
+        words.first().take(3).uppercase()
+    } else {
+        words.mapNotNull { it.firstOrNull()?.uppercaseChar() }
+            .joinToString("")
+            .take(5)
+    }
+
+    return if (isLab) "$acronym LAB" else acronym
+}
 }
