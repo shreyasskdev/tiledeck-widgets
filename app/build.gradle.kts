@@ -15,8 +15,8 @@ android {
         applicationId = "io.github.shreyasskdev.tiledeck"
         minSdk = 26
         targetSdk = 37
-        versionCode = 2
-        versionName = "2.5.0"
+        versionCode = 3
+        versionName = "2.5.1"
     }
 
     splits {
