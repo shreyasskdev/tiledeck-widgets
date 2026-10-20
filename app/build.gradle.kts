@@ -15,8 +15,22 @@ android {
         applicationId = "io.github.shreyasskdev.tiledeck"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "2.0.0"
+        versionCode = 2
+        versionName = "2.5.0"
+    }
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include(
+                "arm64-v8a",
+                "armeabi-v7a",
+                "x86_64",
+                "x86"
+            )
+            isUniversalApk = false
+        }
     }
 
     buildFeatures {
@@ -28,6 +42,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -42,8 +60,8 @@ android {
 dependencies {
     implementation("androidx.core:core-ktx:1.19.1")
     implementation("androidx.activity:activity-compose:1.14.0-alpha03")
-    implementation("androidx.compose.ui:ui:1.13.0-alpha03")
-    implementation("androidx.compose.material3:material3:1.5.0-alpha29")
+    implementation("androidx.compose.ui:ui:1.13.0-beta01")
+    implementation("androidx.compose.material3:material3:1.5.0-beta01")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
