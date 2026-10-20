@@ -8,7 +8,6 @@ Not affiliated with Etlab, Etuwa Concepts, or any institution.
 
 ## Screenshots
 <img width="300" alt="Screenshot" src="https://github.com/user-attachments/assets/564b6582-9fdc-4bd4-9ba1-2e9e28e4a8a6" />
-<img width="300" alt="image" src="https://github.com/user-attachments/assets/ebcf606d-2378-4498-b316-051a4d33b975" />
 
 
 ## How it works
